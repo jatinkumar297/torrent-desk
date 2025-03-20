@@ -1,0 +1,19 @@
+:root {
+	--color-background: rgb(9, 9, 11);
+	--color-foreground: rgb(250, 250, 250);
+	
+	--color-secondary: rgb(22, 22, 25);
+	--color-highlight: rgb(39, 39, 42);
+	
+	--color-accent: rgb(39, 39, 42);
+	--color-accent-foreground: rgb(250, 250, 250);
+	--color-highlight: rgb(56, 56, 61);
+	
+	--color-destructive: rgb(127, 29, 29);
+	
+	--color-muted: rgb(39, 39, 42);
+	--color-muted-foreground: rgb(161, 161, 170);
+
+	--color-border: rgb(33, 33, 38);
+	/* --font-display: "Poppins", "sans-serif"; */
+}
