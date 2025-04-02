@@ -1,19 +1,20 @@
 import * as fs from "fs"
+import * as _path from "path"
 
 export function reconstructFile(inputFile, outputFile, callback) {
-  const writeStream = fs.createWriteStream(outputFile)
-  const readStream = fs.createReadStream(inputFile)
+	const writeStream = fs.createWriteStream(outputFile)
+	const readStream = fs.createReadStream(inputFile)
 
-  readStream.pipe(writeStream, { end: false })
+	readStream.pipe(writeStream, { end: false })
 
-  readStream.on("end", () => {
-    writeStream.end(() => {
+	readStream.on("end", () => {
+		writeStream.end(() => {
 			callback()
 			console.log(`File reconstructed at ${outputFile}`)
 		})
-  })
+	})
 
-  readStream.on("error", (err) => console.error(`Error reading:`, err))
+	readStream.on("error", (err) => console.error(`Error reading:`, err))
 }
 
 export function reconstructMultiFile(inputFile, torrentInfo, callback) {
@@ -27,7 +28,7 @@ export function reconstructMultiFile(inputFile, torrentInfo, callback) {
 		}
 
 		const { path, length } = torrentInfo.files[fileIndex]
-		const writeStream = fs.createWriteStream(`download/${path}`)
+		const writeStream = fs.createWriteStream(_path.join(inputFile, "../", path))
 		let remainingBytes = length
 
 		function writeNextChunk(pieceIndex) {

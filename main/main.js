@@ -1,5 +1,5 @@
 import { app, BrowserWindow } from "electron"
-import "./ipcHandlers.js"
+import { attachListeners } from "./ipcHandlers.js"
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
@@ -19,11 +19,13 @@ const createWindow = () => {
 		autoHideMenuBar: true,
 	})
 
+	attachListeners(mainWindow)
+
 	// and load the index.html of the app.
 	mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY)
 
 	// Open the DevTools.
-	// mainWindow.webContents.openDevTools();
+	mainWindow.webContents.openDevTools();
 }
 
 // This method will be called when Electron has finished

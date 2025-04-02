@@ -14,9 +14,12 @@ import findActiveSeeders from "./helpers/findActiveSeeders.js"
 import createJobScheduler from "./modules/jobScheduler.js"
 import { reconstructFile, reconstructMultiFile } from "./modules/reconstruct.js"
 import announceToTracker from "./modules/announce/index.js"
+import { IPC_EVENT_NAMES } from "../constants.js"
+import { selectFileLocation } from "./lib/selectFileLocation.js"
+import path from "path"
 
-async function processTorrent(buf) {
-	const torrent = bencode.decode(buf)
+export default async function processTorrent(window, buf) {
+	const torrent = bencode.decode(Buffer.from(buf))
 	const infoHash = createHash("sha1").update(bencode.encode(torrent.info)).digest("hex")
 	const size = torrent.info.files
 		? torrent.info.files.map((file) => file.length).reduce((a, b) => a + b)
@@ -32,18 +35,42 @@ async function processTorrent(buf) {
 
 	const logsDir = `logs/${torrent.info.name}`
 	const progressFilePath = createDir(`${logsDir}/progress.json`)
-	const tempFilePath = createDir(`temp/${torrent.info.name}.bin`)
+	const tempFilePath = await selectFileLocation(`${torrent.info.name}.bin`)
 	createPreAllocatedFile(tempFilePath, size)
 
+	const id = Date.now().toString()
+	window.webContents.send(IPC_EVENT_NAMES.START_DOWNLOAD, {
+		id: id,
+		name: torrent.info.name.toString(),
+		size: torrent.info.length,
+		status: -1,
+		downloaded: 0,
+		filePath: path.join(torrent?.files ? torrent.files[0].name.toString() : tempFilePath, "../"),
+		files: torrent?.files?.map((i) => ({
+			name: i.name.toString(),
+			size: i.length,
+			downloaded: 0,
+		})),
+	})
+
+	const sendUpdate = throttle((params) => {
+		window.webContents.send(IPC_EVENT_NAMES.UPDATE_DOWNLOAD, params)
+	}, 500)
+
 	function reconstruct() {
-		const calllback = () => {
+		const callback = () => {
 			fs.rmSync(logsDir, { recursive: true, force: true })
 			fs.rmSync(tempFilePath, { recursive: true, force: true })
+			sendUpdate({ id, downloaded: torrent.info.length })
 		}
 
-		if (torrent.info.files?.length) reconstructMultiFile(tempFilePath, torrent, calllback)
+		if (torrent.info.files?.length) reconstructMultiFile(tempFilePath, torrent, callback)
 		else if (torrent.info.name)
-			reconstructFile(tempFilePath, createDir(`downloads/${torrent.info.name}`), calllback)
+			reconstructFile(
+				tempFilePath,
+				path.join(tempFilePath, "../", torrent.info.name.toString()),
+				callback
+			)
 	}
 
 	let {
@@ -98,11 +125,16 @@ async function processTorrent(buf) {
 		try {
 			receivedBlocks++
 			const total = +((receivedBlocks * 100) / totalBlocksCount).toFixed(2)
-			print(`⌛ Downloaded piece: ${pieceIndex} [${completion}%] - ${total}%`)
-
 			fs.writeSync(fd, buffer, 0, buffer.length, position)
 
 			if (completion) saveProgressLog()
+			sendUpdate({
+				id,
+				downloaded: receivedBlocks * constants.blockSize,
+				status: 1,
+			})
+
+			print(`⌛ Downloaded piece: ${pieceIndex} [${completion}%] - ${total}%`)
 		} catch (err) {
 			console.error(err)
 			console.error("^^^ Write failed! Args: ", { buffer, pieceIndex, offset, position })
@@ -112,7 +144,6 @@ async function processTorrent(buf) {
 	let inProgress = 0
 
 	while (receivedBlocks < totalBlocksCount) {
-		console.log(receivedBlocks, totalBlocksCount)
 		await Promise.all(
 			activePeers
 				.filter((i) => !i.failed && !i.inProgress)
