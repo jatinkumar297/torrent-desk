@@ -4,14 +4,16 @@ import peerId from "../../lib/peerId.js"
 import { getPeers, port } from "../../lib/utils.js"
 
 export default function announceViaUDP(rawUrl, infoHash, size) {
-	return new Promise(resolve => {
+	return new Promise((resolve) => {
 		const socket = dgram.createSocket("udp4")
 
 		socket.bind(port, "0.0.0.0", () => {
 			console.log(`Socket bound to ${socket.address().address}:${socket.address().port}`)
 		})
 		socket.on("error", console.error)
-		socket.on("close", () => console.log("Socket closed"))
+		socket.on("close", () => {
+			console.log("Socket closed")
+		})
 		socket.on("message", (response, rinfo) => {
 			if (respType(response) === "connect") {
 				const connResp = parseConnResp(response)
@@ -19,6 +21,8 @@ export default function announceViaUDP(rawUrl, infoHash, size) {
 				udpSend(socket, announceReq, rawUrl)
 			} else if (respType(response) === "announce") {
 				const announceResp = parseAnnounceResp(response)
+				socket?.removeAllListeners?.()
+				socket?.close?.()
 				resolve(announceResp)
 			}
 		})

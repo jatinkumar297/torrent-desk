@@ -2,18 +2,12 @@ import { Socket } from "net"
 import dataHandler from "./dataHandler.js"
 import { buildHandshake } from "./helpers.js"
 
-export default function connectToPeer({
-	peer,
-	infoHash,
-	handshake = true,
-	state,
-	...params
-} = {}) {
+export default function connectToPeer({ peer, infoHash, handshake = true, state, control, ...params } = {}) {
 	return new Promise((res, rej) => {
 		const socket = new Socket()
 		socket.setTimeout(3000)
 
-		function closeConnection (data, success) {
+		function closeConnection(data, success) {
 			socket.end(() => {
 				socket?.removeAllListeners()?.destroy()
 				if (success) res(data)
@@ -44,5 +38,6 @@ export default function connectToPeer({
 			socket.write(buildHandshake(infoHash))
 		})
 		socket.connect({ host: peer.ip, port: parseInt(peer.port) })
+		control?.on?.("stop", () => closeConnection(null, true))
 	})
 }
