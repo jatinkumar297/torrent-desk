@@ -1,8 +1,8 @@
 {
-  "name": "my-new-app",
-  "productName": "my-new-app",
+  "name": "node-torrent",
+  "productName": "node-torrent",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "Nodejs, Reactjs and Electron based Bit-Torrent Desktop Client",
   "main": ".webpack/main",
   "scripts": {
     "start": "electron-forge start",

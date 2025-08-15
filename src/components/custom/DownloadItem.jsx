@@ -147,7 +147,7 @@ export default function DownloadItem({ id, data, pauseDownload }) {
 								<Button
 									error={true}
 									prefix={<IoMdClose size={18} />}
-									className={"rounded-full !py-1.5 !px-3"}
+									className={"rounded-full !py-1.5 !px-3 border-2"}
 									onClick={(e) => {
 										e.stopPropagation()
 										dispatch(removeDownload({ id }))

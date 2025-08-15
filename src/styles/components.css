@@ -1,5 +1,5 @@
 @layer components {
 	.input-component {
-		@apply !h-auto bg-accent border border-border rounded-lg flex items-center gap-3 !px-4 !py-3 outline-2 outline-offset-2 outline-transparent focus-within:bg-highlight focus-within:outline-white !text-base hover:bg-accent transition-colors duration-300 ease-out;
+		@apply h-auto bg-accent border border-border rounded-lg flex items-center gap-2 px-3 py-2 outline-2 outline-offset-2 outline-transparent focus-within:bg-highlight focus-within:outline-white text-base hover:bg-accent transition-colors duration-300 ease-out;
 	}
 }
